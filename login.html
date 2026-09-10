@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votação do Cardápio Escolar</title>
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --success-color: #198754;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #212529;
+      --text-muted: #6c757d;
+      --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+      color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      border: 2px solid transparent;
+      transition: transform 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #b6d4fe;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .menu-item {
+      margin-bottom: 12px;
+    }
+
+    .item-header {
+      font-weight: bold;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ingredients {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      background-color: #f1f3f5;
+      padding: 6px 10px;
+      border-radius: 6px;
+      line-height: 1.3;
+    }
+
+    .vote-btn {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background-color 0.2s;
+    }
+
+    .vote-btn:hover {
+      background-color: #0b5ed7;
+    }
+
+    /* Sessão de Resultados */
+    .results-section {
+      background: white;
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .results-section h2 {
+      margin-bottom: 20px;
+      color: var(--text-color);
+      text-align: center;
+    }
+
+    .result-bar-container {
+      margin-bottom: 15px;
+    }
+
+    .result-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .progress-bg {
+      background-color: #e9ecef;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--success-color);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .alert-msg {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      color: var(--success-color);
+    }
+
+    .admin-controls {
+      margin-top: 25px;
+      text-align: center;
+    }
+
+    .reset-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .reset-btn:hover {
+      background-color: #bb2d3b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🍲 Votação do Cardápio Escolar</h1>
+      <p>Escolha a sua opção preferida para o almoço da semana!</p>
+    </header>
+
+    <!-- Grid de Opções do Cardápio -->
+    <div class="options-grid" id="cards-container"></div>
+
+    <!-- Área de Exibição dos Resultados -->
+    <section class="results-section">
+      <h2>📊 Resultado Geral da Votação</h2>
+      <div id="results-container"></div>
+      <div id="alert-container"></div>
+
+      <div class="admin-controls">
+        <button class="reset-btn" onclick="resetVotes()">Zerar Votação (Área Escolar)</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Dados dos cardápios com pratos, complementos e seus respetivos ingredientes
+    const menuOptions = [
+      {
+        id: 1,
+        title: "Opção 1: Feijoada da Escola",
+        main: "Feijoada Caprichada",
+        mainIng: "Feijão preto, carne seca, linguiça calabresa, alho, cebola e louro.",
+        comp: "Farofa de Calabresa",
+        compIng: "Farinha de mandioca, linguiça calabresa ralada, cebola e óleo.",
+        salad: "Salada de Alface Crocante",
+        saladIng: "Alface crespa, tomate fresco, pepino em rodelas e limão.",
+        extra: "Arroz Branco e Laranja",
+        extraIng: "Arroz, alho, óleo e laranjas frescas fatiadas."
+      },
+      {
+        id: 2,
+        title: "Opção 2: Carne de Panela",
+        main: "Carne Cozida com Molho",
+        mainIng: "Carne bovina (acém ou coxão duro), tomate, cebola, pimentão e cheiro-verde.",
+        comp: "Farofa Simples Tradicional",
+        compIng: "Farinha de mandioca, manteiga/óleo, cebola picada e sal.",
+        salad: "Salada Cozida Nutritiva",
+        saladIng: "Batata, cenoura e beterraba cozidas no vapor com leve toque de azeite.",
+        extra: "Arroz e Feijão Carioca",
+        extraIng: "Arroz branco soltinho e feijão carioca temperado com alho."
+      },
+      {
+        id: 3,
+        title: "Opção 3: Strogonoff Cremoso",
+        main: "Strogonoff de Frango",
+        mainIng: "Peito de frango em cubos, creme de leite, molho de tomate, milho e temperos.",
+        comp: "Farofa Simples Tradicional",
+        compIng: "Farinha de mandioca, óleo, cebola e sal.",
+        salad: "Salada de Alface e Tomate",
+        saladIng: "Alface, tomate fatiado, pepino e vinagrete leve.",
+        extra: "Arroz Branco e Batata Cozida",
+        extraIng: "Arroz branco e rodelas de batata cozidas."
+      },
+      {
+        id: 4,
+        title: "Opção 4: Creme de Galinha",
+        main: "Creme de Galinha Especial",
+        mainIng: "Peito de frango desfiado, milho verde, leite, creme de leite e cheiro-verde.",
+        comp: "Farofa de Calabresa",
+        compIng: "Farinha de mandioca e linguiça calabresa sequinha.",
+        salad: "Salada Cozida Colorida",
+        saladIng: "Batata, cenoura picada e beterraba cozidas.",
+        extra: "Arroz Branco e Feijão Carioca",
+        extraIng: "Arroz soltinho e feijão carioca temperado."
+      }
+    ];
+
+    // Inicialização do armazenamento de votos no navegador (localStorage)
+    function getVotes() {
+      const votes = localStorage.getItem('school_menu_votes');
+      if (votes) {
+        return JSON.parse(votes);
+      }
+      // Votos iniciais padrão (exemplo)
+      return { 1: 0, 2: 0, 3: 0, 4: 0 };
+    }
+
+    function saveVotes(votes) {
+      localStorage.setItem('school_menu_votes', JSON.stringify(votes));
+    }
+
+    // Renderização dos cards com nome e ingredientes
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      menuOptions.forEach(option => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div>
+            <h3 class="card-title">${option.title}</h3>
+
+            <div class="menu-item">
+              <div class="item-header">🍗 Prato Principal: ${option.main}</div>
+              <div class="ingredients"><b>Ingredientes:</b> ${option.mainIng}</div>
+            </div>
+
+            <div class="menu-item">
+              <div class="item-header">🌾 Acompanhamento: ${option.comp}</div>
+              <div class="ingredients"><b>Ingredientes:</b> ${option.compIng}</div>
+            </div>
+
+            <div class="menu-item">
+              <div class="item-header">🥗 Salada: ${option.salad}</div>
+              <div class="ingredients"><b>Ingredientes:</b> ${option.saladIng}</div>
+            </div>
+
+            <div class="menu-item">
+              <div class="item-header">🍚 Base: ${option.extra}</div>
+              <div class="ingredients"><b>Ingredientes:</b> ${option.extraIng}</div>
+            </div>
+          </div>
+
+          <button class="vote-btn" onclick="vote(${option.id})">Votar nesta opção</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Função para registrar o voto
+    function vote(optionId) {
+      const hasVoted = localStorage.getItem('has_voted_user');
+      
+      if (hasVoted) {
+        document.getElementById('alert-container').innerHTML = 
+          `<p class="alert-msg" style="color: #dc3545;">⚠️ Você já votou hoje! Obrigado pela participação.</p>`;
+        return;
+      }
+
+      const votes = getVotes();
+      votes[optionId] = (votes[optionId] || 0) + 1;
+      saveVotes(votes);
+
+      // Marca que este navegador/aluno já votou
+      localStorage.setItem('has_voted_user', 'true');
+
+      document.getElementById('alert-container').innerHTML = 
+        `<p class="alert-msg">✅ Voto registrado com sucesso na ${menuOptions.find(o => o.id === optionId).title}!</p>`;
+
+      renderResults();
+    }
+
+    // Renderização da barra de resultados
+    function renderResults() {
+      const votes = getVotes();
+      const resultsContainer = document.getElementById('results-container');
+      resultsContainer.innerHTML = '';
+
+      const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
+
+      menuOptions.forEach(option => {
+        const count = votes[option.id] || 0;
+        const percentage = totalVotes === 0 ? 0 : Math.round((count / totalVotes) * 100);
+
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-bar-container';
+        resultItem.innerHTML = `
+          <div class="result-info">
+            <span>${option.title}</span>
+            <span>${count} voto(s) (${percentage}%)</span>
+          </div>
+          <div class="progress-bg">
+            <div class="progress-fill" style="width: ${percentage}%;"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(resultItem);
+      });
+    }
+
+    // Função de reinicialização para testes ou novo dia de votação
+    function resetVotes() {
+      if (confirm("Tem certeza que deseja zerar todos os votos?")) {
+        localStorage.removeItem('school_menu_votes');
+        localStorage.removeItem('has_voted_user');
+        document.getElementById('alert-container').innerHTML = '';
+        renderResults();
+      }
+    }
+
+    // Inicializar a aplicação ao carregar a página
+    renderCards();
+    renderResults();
+  </script>
+</body>
+</html>
