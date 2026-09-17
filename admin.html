@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Gestão do Cardápio Escolar</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg-slate: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-slate);
+      color: var(--text-main);
+      padding: 24px;
+    }
+
+    .admin-container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* Topbar Admin */
+    header.admin-header {
+      background: #1e293b;
+      color: white;
+      padding: 20px 28px;
+      border-radius: var(--border-radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+    }
+
+    .admin-header h1 {
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-header .subtitle {
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Botões Globais */
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    .btn-secondary {
+      background-color: #475569;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #334155;
+    }
+
+    /* Cards de Métricas Rápidas */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border-left: 5px solid var(--primary);
+    }
+
+    .stat-card.success { border-left-color: var(--success); }
+    .stat-card.warning { border-left-color: var(--warning); }
+
+    .stat-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-top: 5px;
+      color: var(--text-main);
+    }
+
+    .stat-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Sessão Principal por Dias */
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 18px;
+      color: var(--text-main);
+    }
+
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 25px;
+    }
+
+    .day-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 22px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .day-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .day-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .day-total-badge {
+      background-color: #e0e7ff;
+      color: #4338ca;
+      font-size: 0.8rem;
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    /* Lista de Opções com Barras de Progresso */
+    .option-bar-group {
+      margin-bottom: 16px;
+    }
+
+    .option-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .option-name {
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .option-stats {
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .bar-bg {
+      background-color: #e2e8f0;
+      height: 14px;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      border-radius: 7px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-fill.winner {
+      background-color: var(--success);
+    }
+
+    .winner-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: #dcfce7;
+      color: #15803d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      font-weight: bold;
+    }
+
+    /* Estilo de Impressão (Relatório) */
+    @media print {
+      body { background: white; padding: 0; }
+      .header-actions, .admin-header p { display: none; }
+      .admin-container { max-width: 100%; }
+      .day-card { break-inside: avoid; border: 1px solid #ccc; margin-bottom: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-container">
+    
+    <!-- Cabeçalho do Admin -->
+    <header class="admin-header">
+      <div>
+        <h1>🔒 Painel de Controle - Nutrição Escolar</h1>
+        <div class="subtitle">Monitoramento das preferências dos alunos por dia da semana</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir Relatório</button>
+        <button class="btn btn-danger" onclick="confirmResetAll()">🗑️ Limpar Cardápio da Semana</button>
+      </div>
+    </header>
+
+    <!-- Resumo de Indicadores Gerais (Cards de Topo) -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">Total de Votos no Geral</div>
+        <div class="stat-value" id="stat-total-votes">0</div>
+        <div class="stat-desc">Votos computados nesta semana</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-title">Dia Mais Votado</div>
+        <div class="stat-value" id="stat-top-day">-</div>
+        <div class="stat-desc">Maior engajamento dos estudantes</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-title">Status da Votação</div>
+        <div class="stat-value" id="stat-status">Em Aberto</div>
+        <div class="stat-desc">Alunos podem registrar votos</div>
+      </div>
+    </div>
+
+    <!-- Monitoramento por Dia da Semana -->
+    <h2 class="section-title">📊 Acompanhamento Detalhado por Dia</h2>
+    <div class="days-grid" id="days-grid-container"></div>
+
+  </div>
+
+  <script>
+    // Estrutura do cardápio cadastrado na escola
+    const weeklyMenu = {
+      segunda: {
+        label: "Segunda-feira",
+        options: [
+          { id: "seg_1", name: "Opção 1: Feijoada Especial" },
+          { id: "seg_2", name: "Opção 2: Carne de Panela Caseira" },
+          { id: "seg_3", name: "Opção 3: Strogonoff de Frango" },
+          { id: "seg_4", name: "Opção 4: Peito de Frango Desfiado" }
+        ]
+      },
+      terca: {
+        label: "Terça-feira",
+        options: [
+          { id: "ter_1", name: "Opção 1: Carne Assada ao Molho" },
+          { id: "ter_2", name: "Opção 2: Creme de Galinha" },
+          { id: "ter_3", name: "Opção 3: Carne Cozida Ensopada" },
+          { id: "ter_4", name: "Opção 4: Frango Desfiado com Milho" }
+        ]
+      },
+      quarta: {
+        label: "Quarta-feira",
+        options: [
+          { id: "qua_1", name: "Opção 1: Feijoada do Chef" },
+          { id: "qua_2", name: "Opção 2: Strogonoff Delícia" },
+          { id: "qua_3", name: "Opção 3: Carne Assada com Ervas" },
+          { id: "qua_4", name: "Opção 4: Creme de Galinha Especial" }
+        ]
+      },
+      quinta: {
+        label: "Quinta-feira",
+        options: [
+          { id: "qui_1", name: "Opção 1: Carne de Panela com Legumes" },
+          { id: "qui_2", name: "Opção 2: Frango Desfiado Cremoso" },
+          { id: "qui_3", name: "Opção 3: Feijoada Tradicional" },
+          { id: "qui_4", name: "Opção 4: Strogonoff de Frango" }
+        ]
+      },
+      sexta: {
+        label: "Sexta-feira",
+        options: [
+          { id: "sex_1", name: "Opção 1: Creme de Galinha Caseiro" },
+          { id: "sex_2", name: "Opção 2: Carne Assada Suculenta" },
+          { id: "sex_3", name: "Opção 3: Feijoada de Sexta" },
+          { id: "sex_4", name: "Opção 4: Frango Desfiado da Casa" }
+        ]
+      }
+    };
+
+    // Lê os votos do localStorage compartilhados com a tela dos alunos
+    function getStoredVotes() {
+      const votes = localStorage.getItem('school_menu_weekly_votes');
+      return votes ? JSON.parse(votes) : {};
+    }
+
+    // Renderiza todo o Dashboard Admin
+    function renderAdminDashboard() {
+      const votes = getStoredVotes();
+      const container = document.getElementById('days-grid-container');
+      container.innerHTML = '';
+
+      let totalGlobalVotes = 0;
+      let highestDayVotes = 0;
+      let topDayName = '-';
+
+      // Percorre todos os 5 dias
+      Object.keys(weeklyMenu).forEach(dayKey => {
+        const dayData = weeklyMenu[dayKey];
+        
+        // Calcular total de votos do dia
+        let dayTotalVotes = 0;
+        dayData.options.forEach(opt => {
+          dayTotalVotes += (votes[opt.id] || 0);
+        });
+
+        totalGlobalVotes += dayTotalVotes;
+
+        if (dayTotalVotes > highestDayVotes) {
+          highestDayVotes = dayTotalVotes;
+          topDayName = dayData.label;
+        }
+
+        // Descobrir qual o prato mais votado do dia (Vencedor parcial)
+        let maxVotesInDay = -1;
+        dayData.options.forEach(opt => {
+          const v = votes[opt.id] || 0;
+          if (v > maxVotesInDay && v > 0) {
+            maxVotesInDay = v;
+          }
+        });
+
+        // Construção do Card do Dia
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+
+        let optionsHTML = '';
+        dayData.options.forEach(option => {
+          const count = votes[option.id] || 0;
+          const percentage = dayTotalVotes === 0 ? 0 : Math.round((count / dayTotalVotes) * 100);
+          const isWinner = count === maxVotesInDay && count > 0;
+
+          optionsHTML += `
+            <div class="option-bar-group">
+              <div class="option-info">
+                <span class="option-name">
+                  ${option.name}
+                  ${isWinner ? '<span class="winner-tag">🏆 1º Lugar</span>' : ''}
+                </span>
+                <span class="option-stats">${percentage}% (${count} votos)</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill ${isWinner ? 'winner' : ''}" style="width: ${percentage}%;"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        dayCard.innerHTML = `
+          <div class="day-card-header">
+            <span class="day-title">${dayData.label}</span>
+            <span class="day-total-badge">${dayTotalVotes} Voto(s) Total</span>
+          </div>
+          <div>${optionsHTML}</div>
+        `;
+
+        container.appendChild(dayCard);
+      });
+
+      // Atualizar Cards Superiores de Resumo
+      document.getElementById('stat-total-votes').innerText = totalGlobalVotes;
+      document.getElementById('stat-top-day').innerText = topDayName;
+    }
+
+    // Função de limpeza dos dados (Zerar Cardápio da Semana)
+    function confirmResetAll() {
+      const confirmAction = confirm(
+        "⚠️ ATENÇÃO: Deseja realmente ZERAR TODAS AS VOTAÇÕES da semana?\n\nEsta ação apagará as escolhas dos alunos para que um novo cardápio seja votado."
+      );
+
+      if (confirmAction) {
+        // Limpa os registros de votos do localStorage
+        localStorage.removeItem('school_menu_weekly_votes');
+        localStorage.removeItem('has_voted_days');
+        localStorage.removeItem('school_menu_votes');
+
+        alert("✅ Cardápio zerado com sucesso! A nova votação já está disponível.");
+        renderAdminDashboard();
+      }
+    }
+
+    // Atualização automática em tempo real a cada 5 segundos
+    setInterval(renderAdminDashboard, 5000);
+
+    // Inicialização da página
+    renderAdminDashboard();
+  </script>
+</body>
+</html>
