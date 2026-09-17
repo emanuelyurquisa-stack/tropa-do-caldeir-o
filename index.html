@@ -1,11 +1,685 @@
-<!DOCTYPE html>
-<html lang="en">
+<!<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votação do Cardápio Escolar - Semanal</title>
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --primary-dark: #0b5ed7;
+      --success: #198754;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --muted: #6c757d;
+      --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+      padding: 25px 20px;
+      background: linear-gradient(135deg, #0d6efd, #055160);
+      color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      opacity: 0.95;
+    }
+
+    /* Abas dos Dias da Semana */
+    .day-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background-color: #e9ecef;
+      border: 2px solid #dee2e6;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #495057;
+    }
+
+    .tab-btn:hover {
+      background-color: #ced4da;
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    /* Grid de Opções */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #b6d4fe;
+    }
+
+    .card-header {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f3f5;
+    }
+
+    .menu-item-row {
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .item-title {
+      font-weight: 700;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ingredients-inline {
+      display: block;
+      font-size: 0.85rem;
+      color: #555;
+      background-color: #f8f9fa;
+      border-left: 3px solid var(--primary);
+      padding: 6px 10px;
+      margin-top: 4px;
+      border-radius: 0 6px 6px 0;
+      line-height: 1.3;
+    }
+
+    .vote-btn {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background-color 0.2s;
+    }
+
+    .vote-btn:hover {
+      background-color: var(--primary-dark);
+    }
+
+    /* Seção de Resultados */
+    .results-section {
+      background: white;
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+    }
+
+    .results-section h2 {
+      margin-bottom: 15px;
+      text-align: center;
+      color: #333;
+    }
+
+    .result-bar-container {
+      margin-bottom: 15px;
+    }
+
+    .result-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .progress-bg {
+      background-color: #e9ecef;
+      height: 22px;
+      border-radius: 11px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--success);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .alert-msg {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    .admin-controls {
+      margin-top: 25px;
+      text-align: center;
+    }
+
+    .reset-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .reset-btn:hover {
+      background-color: #bb2d3b;
+    }
+
+    @media (max-width: 600px) {
+      .day-tabs {
+        flex-direction: column;
+      }
+      .tab-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    Olá abestados!S2
+
+  <div class="container">
+    <header>
+      <h1>🍲 Votação do Cardápio Escolar</h1>
+      <p>Escolha a melhor opção de almoço para cada dia da semana!</p>
+    </header>
+
+    <!-- Navegação por Dias da Semana -->
+    <div class="day-tabs">
+      <button class="tab-btn active" onclick="selectDay('segunda')">Segunda-feira</button>
+      <button class="tab-btn" onclick="selectDay('terca')">Terça-feira</button>
+      <button class="tab-btn" onclick="selectDay('quarta')">Quarta-feira</button>
+      <button class="tab-btn" onclick="selectDay('quinta')">Quinta-feira</button>
+      <button class="tab-btn" onclick="selectDay('sexta')">Sexta-feira</button>
+    </div>
+
+    <!-- Opções do Dia Selecionado -->
+    <div class="options-grid" id="cards-container"></div>
+
+    <!-- Seção de Resultados da Votação do Dia -->
+    <section class="results-section">
+      <h2 id="results-title">📊 Resultado da Votação - Segunda-feira</h2>
+      <div id="results-container"></div>
+      <div id="alert-container"></div>
+
+      <div class="admin-controls">
+        <button class="reset-btn" onclick="resetVotes()">Zerar Votação da Semana</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Banco de dados do cardápio semanal (4 opções por dia)
+    const weeklyMenu = {
+      segunda: {
+        label: "Segunda-feira",
+        options: [
+          {
+            id: "seg_1",
+            title: "Opção 1: Feijoada Especial",
+            main: "Feijoada Caprichada",
+            mainIng: "Feijão preto, carne seca, linguiça calabresa, alho, cebola e louro.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca, linguiça calabresa picada, cebola e óleo.",
+            salad: "Salada de Alface Crocante",
+            saladIng: "Alface crespa, tomate fresco, pepino em rodelas e limão.",
+            base: "Arroz Branco e Laranja",
+            baseIng: "Arroz, alho, óleo e laranjas frescas fatiadas."
+          },
+          {
+            id: "seg_2",
+            title: "Opção 2: Carne de Panela Caseira",
+            main: "Carne Cozida com Batata",
+            mainIng: "Carne bovina (acém/coxão duro), batata, tomate, cebola, pimentão e alho.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, manteiga, cebola picada e sal.",
+            salad: "Salada Cozida Nutritiva",
+            saladIng: "Batata, cenoura e beterraba cozidas no vapor com azeite.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco soltinho e feijão carioca temperado com alho."
+          },
+          {
+            id: "seg_3",
+            title: "Opção 3: Strogonoff de Frango",
+            main: "Strogonoff Cremoso",
+            mainIng: "Peito de frango em cubos, creme de leite, molho de tomate, milho, alho e cebola.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, óleo, cebola e sal.",
+            salad: "Salada de Alface e Tomate",
+            saladIng: "Alface, tomate fatiado, pepino e vinagrete leve.",
+            base: "Arroz Branco Soltinho",
+            baseIng: "Arroz branco, alho, óleo e sal."
+          },
+          {
+            id: "seg_4",
+            title: "Opção 4: Peito de Frango Desfiado",
+            main: "Frango Desfiado Acebolado",
+            mainIng: "Peito de frango desfiado, cebola em rodelas, tomate, milho e cheiro-verde.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca e linguiça calabresa crocante.",
+            salad: "Salada Cozida Colorida",
+            saladIng: "Batata, cenoura e beterraba cozidas em cubos.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco e feijão carioca fresquinho."
+          }
+        ]
+      },
+      terca: {
+        label: "Terça-feira",
+        options: [
+          {
+            id: "ter_1",
+            title: "Opção 1: Carne Assada ao Molho",
+            main: "Carne Assada de Forno",
+            mainIng: "Carne bovina (maminha/acém), molho de tomate caseiro, alho e cheiro-verde.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, manteiga, alho e sal.",
+            salad: "Salada Cozida Nutritiva",
+            saladIng: "Batata, cenoura e beterraba cozidas e temperadas.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco soltinho e feijão carioca."
+          },
+          {
+            id: "ter_2",
+            title: "Opção 2: Creme de Galinha",
+            main: "Creme de Galinha Tradicional",
+            mainIng: "Peito de frango desfiado, leite, amido de milho, creme de leite, milho e alho.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca, linguiça calabresa e cebola.",
+            salad: "Salada de Alface e Pepino",
+            saladIng: "Alface crespa, tomate fresco e pepino fatiado.",
+            base: "Arroz Branco Soltinho",
+            baseIng: "Arroz branco, alho e sal."
+          },
+          {
+            id: "ter_3",
+            title: "Opção 3: Carne Cozida Ensopada",
+            main: "Carne de Panela com Cenoura",
+            mainIng: "Carne bovina em cubos, cenoura, tomate, cebola, pimentão e ervas.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca com calabresa e sal.",
+            salad: "Salada Cozida Nutritiva",
+            saladIng: "Batata, cenoura e beterraba no vapor.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco e feijão carioca temperado."
+          },
+          {
+            id: "ter_4",
+            title: "Opção 4: Frango Desfiado com Milho",
+            main: "Peito de Frango ao Molho Amarelo",
+            mainIng: "Peito de frango desfiado, milho verde, molho de tomate, alho e cebola.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, óleo, cebola e sal.",
+            salad: "Salada de Alface e Tomate",
+            saladIng: "Alface, tomate e pepino temperados com limão.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz soltinho e feijão carioca com alho."
+          }
+        ]
+      },
+      quarta: {
+        label: "Quarta-feira",
+        options: [
+          {
+            id: "qua_1",
+            title: "Opção 1: Feijoada do Chef",
+            main: "Feijoada Caprichada",
+            mainIng: "Feijão preto, linguiça calabresa, carne seca, alho e folha de louro.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca com linguiça calabresa bem douradinha.",
+            salad: "Salada Cozida Nutritiva",
+            saladIng: "Batata, cenoura e beterraba em cubos.",
+            base: "Arroz e Laranja",
+            baseIng: "Arroz branco e gomos de laranja doce."
+          },
+          {
+            id: "qua_2",
+            title: "Opção 2: Strogonoff Delícia",
+            main: "Strogonoff de Frango",
+            mainIng: "Peito de frango em cubos, creme de leite, molho de tomate, milho e alho.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, manteiga e cebola.",
+            salad: "Salada de Alface Crocante",
+            saladIng: "Alface, tomate fresco e pepino.",
+            base: "Arroz Branco",
+            baseIng: "Arroz branco soltinho cozido com alho."
+          },
+          {
+            id: "qua_3",
+            title: "Opção 3: Carne Assada com Ervas",
+            main: "Carne Assada Fatiada",
+            mainIng: "Carne bovina assada com alho, cebola, cheiro-verde e azeite.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, óleo e cebola.",
+            salad: "Salada Cozida Colorida",
+            saladIng: "Batata, cenoura e beterraba cozidas.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco e feijão carioca fresquinho."
+          },
+          {
+            id: "qua_4",
+            title: "Opção 4: Creme de Galinha Especial",
+            main: "Creme de Galinha com Milho",
+            mainIng: "Peito de frango desfiado, milho verde, creme de leite, leite e alho.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca, calabresa e cebola.",
+            salad: "Salada de Alface e Pepino",
+            saladIng: "Alface crespa, tomate e pepino fatiado.",
+            base: "Arroz Branco Soltinho",
+            baseIng: "Arroz branco temperado com alho."
+          }
+        ]
+      },
+      quinta: {
+        label: "Quinta-feira",
+        options: [
+          {
+            id: "qui_1",
+            title: "Opção 1: Carne de Panela com Legumes",
+            main: "Carne Cozida Macia",
+            mainIng: "Carne bovina em cubos, batata, cenoura, tomate, pimentão e cebola.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca com linguiça calabresa bem frita.",
+            salad: "Salada de Alface Fresca",
+            saladIng: "Alface, tomate e pepino temperados.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco e feijão carioca temperado."
+          },
+          {
+            id: "qui_2",
+            title: "Opção 2: Frango Desfiado Cremoso",
+            main: "Peito de Frango ao Molho Vermelho",
+            mainIng: "Peito de frango desfiado, molho de tomate, milho, cebola e cheiro-verde.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, manteiga, alho e sal.",
+            salad: "Salada Cozida Nutritiva",
+            saladIng: "Batata, cenoura e beterraba macias.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz soltinho e feijão carioca."
+          },
+          {
+            id: "qui_3",
+            title: "Opção 3: Feijoada Tradicional",
+            main: "Feijoada Caprichada",
+            mainIng: "Feijão preto, carne seca, linguiça calabresa, alho e cebola.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, óleo, cebola e sal.",
+            salad: "Salada de Alface e Tomate",
+            saladIng: "Alface crespa, tomate e pepino fatiado.",
+            base: "Arroz Branco e Laranja",
+            baseIng: "Arroz soltinho e rodelas de laranja."
+          },
+          {
+            id: "qui_4",
+            title: "Opção 4: Strogonoff de Frango",
+            main: "Strogonoff com Milho",
+            mainIng: "Peito de frango, creme de leite, molho de tomate, milho e tempero verde.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca, calabresa crocante e cebola.",
+            salad: "Salada Cozida Colorida",
+            saladIng: "Batata, cenoura e beterraba temperadas.",
+            base: "Arroz Branco Soltinho",
+            baseIng: "Arroz branco cozido com alho."
+          }
+        ]
+      },
+      sexta: {
+        label: "Sexta-feira",
+        options: [
+          {
+            id: "sex_1",
+            title: "Opção 1: Creme de Galinha Caseiro",
+            main: "Creme de Galinha Cremoso",
+            mainIng: "Peito de frango desfiado, milho verde, leite, creme de leite e cheiro-verde.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, manteiga, cebola e sal.",
+            salad: "Salada Cozida Nutritiva",
+            saladIng: "Batata, cenoura e beterraba em cubos cozidos.",
+            base: "Arroz Branco Soltinho",
+            baseIng: "Arroz branco fresquinho."
+          },
+          {
+            id: "sex_2",
+            title: "Opção 2: Carne Assada Suculenta",
+            main: "Carne Assada Fatiada",
+            mainIng: "Carne bovina assada, tomate, cebola, alho e molho especial.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca, linguiça calabresa e óleo.",
+            salad: "Salada de Alface Crocante",
+            saladIng: "Alface, tomate e pepino em rodelas.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz branco e feijão carioca com alho."
+          },
+          {
+            id: "sex_3",
+            title: "Opção 3: Feijoada de Sexta",
+            main: "Feijoada Caprichada",
+            mainIng: "Feijão preto, carne seca, linguiça calabresa, alho e louro.",
+            comp: "Farofa de Calabresa",
+            compIng: "Farinha de mandioca e calabresa bem dourada.",
+            salad: "Salada Cozida Colorida",
+            saladIng: "Batata, cenoura e beterraba cozidas no vapor.",
+            base: "Arroz e Laranja",
+            baseIng: "Arroz soltinho e laranjas em rodelas."
+          },
+          {
+            id: "sex_4",
+            title: "Opção 4: Frango Desfiado da Casa",
+            main: "Peito de Frango Desfiado Refogado",
+            mainIng: "Peito de frango desfiado, alho, cebola, tomate e milho verde.",
+            comp: "Farofa Normal",
+            compIng: "Farinha de mandioca, óleo, cebola e sal.",
+            salad: "Salada de Alface e Pepino",
+            saladIng: "Alface crespa, tomate e pepino.",
+            base: "Arroz e Feijão Carioca",
+            baseIng: "Arroz soltinho e feijão carioca temperado."
+          }
+        ]
+      }
+    };
+
+    let currentDay = 'segunda';
+
+    // Recupera os votos salvos ou inicia vazio
+    function getStoredVotes() {
+      const votes = localStorage.getItem('school_menu_weekly_votes');
+      return votes ? JSON.parse(votes) : {};
+    }
+
+    function saveVotes(votes) {
+      localStorage.setItem('school_menu_weekly_votes', JSON.stringify(votes));
+    }
+
+    // Alternar o dia da semana
+    function selectDay(dayKey) {
+      currentDay = dayKey;
+      
+      // Atualizar botões das abas
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      renderCards();
+      renderResults();
+    }
+
+    // Renderizar os cards de opções do dia selecionado
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      const dayData = weeklyMenu[currentDay];
+
+      dayData.options.forEach(option => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div>
+            <div class="card-header">${option.title}</div>
+
+            <div class="menu-item-row">
+              <span class="item-title">🍖 Prato Principal: ${option.main}</span>
+              <span class="ingredients-inline"><b>Ingredientes:</b> ${option.mainIng}</span>
+            </div>
+
+            <div class="menu-item-row">
+              <span class="item-title">🌾 Complemento: ${option.comp}</span>
+              <span class="ingredients-inline"><b>Ingredientes:</b> ${option.compIng}</span>
+            </div>
+
+            <div class="menu-item-row">
+              <span class="item-title">🥗 Salada: ${option.salad}</span>
+              <span class="ingredients-inline"><b>Ingredientes:</b> ${option.saladIng}</span>
+            </div>
+
+            <div class="menu-item-row">
+              <span class="item-title">🍚 Base: ${option.base}</span>
+              <span class="ingredients-inline"><b>Ingredientes:</b> ${option.baseIng}</span>
+            </div>
+          </div>
+
+          <button class="vote-btn" onclick="vote('${option.id}')">Votar nesta refeição</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Função para votar
+    function vote(optionId) {
+      const userVotes = JSON.parse(localStorage.getItem('has_voted_days') || '{}');
+
+      if (userVotes[currentDay]) {
+        document.getElementById('alert-container').innerHTML = 
+          `<p class="alert-msg" style="color: #dc3545;">⚠️ Você já votou no cardápio de ${weeklyMenu[currentDay].label}!</p>`;
+        return;
+      }
+
+      const votes = getStoredVotes();
+      votes[optionId] = (votes[optionId] || 0) + 1;
+      saveVotes(votes);
+
+      // Regista que o utilizador já votou no dia corrente
+      userVotes[currentDay] = true;
+      localStorage.setItem('has_voted_days', JSON.stringify(userVotes));
+
+      document.getElementById('alert-container').innerHTML = 
+        `<p class="alert-msg" style="color: #198754;">✅ Voto registrado para ${weeklyMenu[currentDay].label} com sucesso!</p>`;
+
+      renderResults();
+    }
+
+    // Exibir o resultado dos votos em barras de progresso
+    function renderResults() {
+      const dayData = weeklyMenu[currentDay];
+      document.getElementById('results-title').innerText = `📊 Resultado da Votação - ${dayData.label}`;
+
+      const votes = getStoredVotes();
+      const resultsContainer = document.getElementById('results-container');
+      resultsContainer.innerHTML = '';
+
+      // Total de votos do dia selecionado
+      let totalDayVotes = 0;
+      dayData.options.forEach(opt => {
+        totalDayVotes += (votes[opt.id] || 0);
+      });
+
+      dayData.options.forEach(option => {
+        const count = votes[option.id] || 0;
+        const percentage = totalDayVotes === 0 ? 0 : Math.round((count / totalDayVotes) * 100);
+
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-bar-container';
+        resultItem.innerHTML = `
+          <div class="result-info">
+            <span>${option.title}</span>
+            <span>${count} voto(s) (${percentage}%)</span>
+          </div>
+          <div class="progress-bg">
+            <div class="progress-fill" style="width: ${percentage}%;"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(resultItem);
+      });
+    }
+
+    // Função para zerar a votação completa (Área Administrativa)
+    function resetVotes() {
+      if (confirm("Tem certeza que deseja zerar TODOS os votos de TODOS os dias da semana?")) {
+        localStorage.removeItem('school_menu_weekly_votes');
+        localStorage.removeItem('has_voted_days');
+        document.getElementById('alert-container').innerHTML = '';
+        renderResults();
+        alert("Votações zeradas com sucesso!");
+      }
+    }
+
+    // Inicialização da página
+    renderCards();
+    renderResults();
+  </script>
 </body>
 </html>
