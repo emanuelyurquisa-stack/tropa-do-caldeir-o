@@ -1,0 +1,1221 @@
+<html lang="pt-BR" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriVota - Cardápio Escolar com Login Netlify Auth</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Netlify Identity Widget CDN -->
+  <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .gradient-header {
+      background: linear-gradient(135deg, #0284c7 0%, #0f766e 100%);
+    }
+    .gradient-card {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @media print {
+      header, #navTabs, .no-print, #toastContainer, #customModal {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .print-full-width {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased custom-scrollbar">
+
+  <header class="gradient-header text-white shadow-md sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo & School System Badge -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('voting')">
+        <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-md shadow-inner border border-white/20">
+          🥗
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-black tracking-tight leading-none">NutriVota</h1>
+            <span class="text-[10px] bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+              SEDUC / Rede Pública
+            </span>
+          </div>
+          <p class="text-xs text-sky-100 mt-1 hidden sm:block">Alimentação Escolar Decidida Pelos Alunos</p>
+        </div>
+      </div>
+
+      <!-- Navigation & User Profile Button -->
+      <div class="flex items-center space-x-3">
+        <nav id="navTabs" class="hidden md:flex bg-black/20 p-1 rounded-xl text-xs font-semibold backdrop-blur-sm border border-white/10">
+          <button id="navBtnVoting" onclick="navigateTo('voting')" class="px-4 py-2 rounded-lg text-white bg-white/20 shadow-sm transition flex items-center gap-1.5">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Votação dos Alunos</span>
+          </button>
+          <button id="navBtnAdmin" onclick="navigateTo('admin')" class="px-4 py-2 rounded-lg text-sky-100 hover:text-white transition flex items-center gap-1.5">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Painel da Nutrição</span>
+          </button>
+        </nav>
+
+        <!-- Auth User Container -->
+        <div id="authContainer">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <section id="loginScreen" class="py-4 max-w-5xl mx-auto">
+      <div class="bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+        
+        <!-- Left Side Banner -->
+        <div class="lg:col-span-5 gradient-header p-8 lg:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div>
+            <div class="inline-flex items-center space-x-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold text-sky-100 mb-6 backdrop-blur-md border border-white/20">
+              <i class="fa-solid fa-building-columns"></i>
+              <span>Acesso Institucional Escolar</span>
+            </div>
+            
+            <h2 class="text-2xl sm:text-3xl font-extrabold mb-4 leading-snug">
+              Cardápio da Merenda Escolar
+            </h2>
+            <p class="text-sky-100 text-xs sm:text-sm leading-relaxed mb-6">
+              Acesse com seu e-mail institucional e selecione sua turma para escolher as refeições que você quer no cardápio desta semana!
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-6 border-t border-white/20 text-xs text-sky-100 font-medium">
+            <div class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-circle-check text-amber-300 text-sm"></i>
+              <span>Votação com e-mail <b>@aluno.escola.edu.br</b> ou <b>@seduc.gov.br</b></span>
+            </div>
+            <div class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-circle-check text-amber-300 text-sm"></i>
+              <span>Suporte às 8 turmas cadastradas na escola</span>
+            </div>
+            <div class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-circle-check text-amber-300 text-sm"></i>
+              <span>1 voto por aluno para cada dia útil da semana</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 p-8 sm:p-10 bg-slate-50 flex flex-col justify-center space-y-6">
+          <div>
+            <h3 class="text-2xl font-black text-slate-800">Entrar na Votação</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Identifique-se com sua conta escolar e selecione sua turma.</p>
+          </div>
+
+          <!-- Netlify Identity Official Widget Trigger -->
+          <div class="bg-white p-5 rounded-2xl border border-sky-200 shadow-sm space-y-3 text-center">
+            <div class="flex items-center justify-center space-x-2 text-sky-700 font-bold text-xs uppercase tracking-wider">
+              <i class="fa-solid fa-shield-halved text-sm"></i>
+              <span>Autenticação Oficial Netlify Auth</span>
+            </div>
+            <p class="text-xs text-slate-600">Acesse via widget oficial do Netlify Identity ou faça o login direto abaixo.</p>
+            <button onclick="triggerNetlifyWidget()" class="w-full py-3 px-4 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm rounded-xl transition shadow-md shadow-sky-600/20 flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Abrir Widget Netlify Identity</span>
+            </button>
+          </div>
+
+          <div class="relative flex items-center justify-center">
+            <div class="border-t border-slate-200 w-full"></div>
+            <span class="bg-slate-50 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest">ou login por formulário</span>
+          </div>
+
+          <!-- Direct Form for Institutional Email & Class Selection -->
+          <form id="instLoginForm" onsubmit="handleInstitutionalLogin(event)" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">E-mail Institucional do Aluno</label>
+              <div class="relative">
+                <i class="fa-solid fa-at absolute left-3 top-3 text-slate-400 text-xs"></i>
+                <input type="email" id="loginEmail" required placeholder="seu.nome@aluno.escola.edu.br" class="w-full pl-9 pr-3 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">Aceita domínios @aluno.escola.edu.br, @seduc.gov.br ou e-mails cadastrados.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Senha do E-mail</label>
+              <div class="relative">
+                <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-xs"></i>
+                <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo</label>
+                <input type="text" id="loginName" placeholder="Ex: Maria Eduarda" class="w-full px-3 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+
+              <!-- Mandatory Class Selection Field strictly matching requested options -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">
+                  Turma do Aluno <span class="text-rose-500">*</span>
+                </label>
+                <select id="loginClass" required class="w-full px-3 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium text-slate-700">
+                  <option value="" disabled selected>Selecione sua Turma...</option>
+                  <option value="9º ano A">9º ano A</option>
+                  <option value="9º ano B">9º ano B</option>
+                  <option value="1º ano DS">1º ano DS (Dev. de Sistemas)</option>
+                  <option value="1º ano ADM">1º ano ADM (Administração)</option>
+                  <option value="2º DS">2º DS (Dev. de Sistemas)</option>
+                  <option value="2º Jogos">2º Jogos (Jogos Digitais)</option>
+                  <option value="3º A">3º A</option>
+                  <option value="3º B">3º B</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Entrar e Acessar Votação</span>
+            </button>
+          </form>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="votingScreen" class="hidden space-y-6">
+
+      <!-- Student Welcome Card -->
+      <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2 mb-1.5">
+            <span class="inline-flex items-center text-[11px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Autenticado com E-mail Escolar
+            </span>
+            <span id="studentClassBadge" class="inline-flex items-center text-[11px] font-extrabold text-sky-800 bg-sky-50 border border-sky-200 px-2.5 py-0.5 rounded-full">
+              <!-- Class Badge -->
+            </span>
+          </div>
+          <h2 class="text-2xl font-black text-slate-800" id="studentWelcomeTitle">Bem-vindo(a)!</h2>
+          <p class="text-xs sm:text-sm text-slate-500">Vote em 1 opção de refeição para cada dia da semana. Seu voto é registrado com sua turma.</p>
+        </div>
+
+        <div id="studentVotingSummaryBadge" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-right text-xs">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto custom-scrollbar">
+        <div class="flex space-x-2 min-w-max">
+          <button onclick="switchDay('segunda')" id="tab_segunda" class="day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+            <span>Segunda-feira</span>
+            <span id="badge_segunda" class="text-[10px] px-2 py-0.5 rounded-full font-extrabold">Pendente</span>
+          </button>
+          <button onclick="switchDay('terca')" id="tab_terca" class="day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+            <span>Terça-feira</span>
+            <span id="badge_terca" class="text-[10px] px-2 py-0.5 rounded-full font-extrabold">Pendente</span>
+          </button>
+          <button onclick="switchDay('quarta')" id="tab_quarta" class="day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+            <span>Quarta-feira</span>
+            <span id="badge_quarta" class="text-[10px] px-2 py-0.5 rounded-full font-extrabold">Pendente</span>
+          </button>
+          <button onclick="switchDay('quinta')" id="tab_quinta" class="day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+            <span>Quinta-feira</span>
+            <span id="badge_quinta" class="text-[10px] px-2 py-0.5 rounded-full font-extrabold">Pendente</span>
+          </button>
+          <button onclick="switchDay('sexta')" id="tab_sexta" class="day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+            <span>Sexta-feira</span>
+            <span id="badge_sexta" class="text-[10px] px-2 py-0.5 rounded-full font-extrabold">Pendente</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Day Header -->
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-day text-sky-600"></i>
+          <span id="activeDayTitle">Cardápio de Segunda-feira</span>
+        </h3>
+        <span class="text-xs font-semibold text-slate-500">4 opções completas de refeição</span>
+      </div>
+
+      <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Dynamically injected options cards -->
+      </div>
+    </section>
+
+    <section id="adminScreen" class="hidden space-y-6">
+
+      <!-- Admin Top Banner -->
+      <div class="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center space-x-2 bg-sky-500/20 text-sky-300 border border-sky-500/30 px-3 py-1 rounded-full text-xs font-bold mb-3">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>Painel da Equipe de Nutrição Escolar</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Relatório Geral da Votação</h2>
+          <p class="text-slate-400 text-xs sm:text-sm mt-1">Acompanhe as preferências dos alunos para planejar o estoque e preparação na cozinha.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button onclick="window.print()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-print"></i>Imprimir Relatório
+          </button>
+          <button onclick="confirmResetWeeklyVotes()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-rose-900/30 flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i>Limpar Cardápio da Semana
+          </button>
+        </div>
+      </div>
+
+      <!-- Class Filter Dropdown & Global Metrics Bar -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-filter text-sky-600 text-base"></i>
+          <label for="adminClassFilter" class="text-xs font-bold text-slate-700 whitespace-nowrap">Filtrar Votos por Turma:</label>
+          <select id="adminClassFilter" onchange="renderAdminDashboard()" class="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 font-bold text-slate-700">
+            <option value="ALL">Todas as Turmas (Visão Geral)</option>
+            <option value="9º ano A">9º ano A</option>
+            <option value="9º ano B">9º ano B</option>
+            <option value="1º ano DS">1º ano DS</option>
+            <option value="1º ano ADM">1º ano ADM</option>
+            <option value="2º DS">2º DS</option>
+            <option value="2º Jogos">2º Jogos</option>
+            <option value="3º A">3º A</option>
+            <option value="3º B">3º B</option>
+          </select>
+        </div>
+
+        <div class="text-xs text-slate-500 font-medium">
+          Exibindo dados <span id="adminFilterStatusText" class="font-bold text-sky-700">gerais de todas as turmas</span>.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-sky-100 text-sky-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            <i class="fa-solid fa-check-double"></i>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total de Votos</span>
+            <div id="statTotalVotes" class="text-2xl font-black text-slate-800">0</div>
+            <span class="text-[11px] text-slate-500">Computados no filtro</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Prato Mais Votado</span>
+            <div id="statTopOverallDish" class="text-xs font-bold text-slate-800 truncate max-w-[150px]">-</div>
+            <span class="text-[11px] text-slate-500">Maior aceitação geral</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Turma Mais Engajada</span>
+            <div id="statTopClass" class="text-sm font-extrabold text-slate-800 truncate max-w-[150px]">-</div>
+            <span class="text-[11px] text-slate-500">Maior participação</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Dia Mais Ativo</span>
+            <div id="statTopActiveDay" class="text-sm font-black text-slate-800">-</div>
+            <span class="text-[11px] text-slate-500">Pico de votação</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-sky-600"></i>
+          Engajamento e Votos por Turma (8 Turmas)
+        </h3>
+        <div id="classParticipationGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Detailed Day-by-Day Results Grid -->
+      <div id="adminDaysGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Dynamically injected results -->
+      </div>
+    </section>
+
+  </main>
+
+  <div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center space-x-3">
+        <div id="modalIcon" class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-bold">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 id="modalTitle" class="text-base font-bold text-slate-800">Confirmação</h3>
+      </div>
+      <p id="modalMessage" class="text-xs text-slate-600 leading-relaxed">
+        Deseja confirmar esta ação?
+      </p>
+      <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+        <button id="modalBtnCancel" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+          Cancelar
+        </button>
+        <button id="modalBtnConfirm" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl transition shadow-md">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Area -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <script>
+    // Complete Weekly Menu Data (5 Days x 4 Options per Day)
+    // Featuring requested dishes: Carne assada/cozida, Strogonoff de frango, Peito de frango desfiado, Creme de galinha, Feijoada caprichada
+    // Complementos: Farofa de calabresa, Farofa normal
+    // Saladas: Salada cozida (batata, cenoura, beterraba), Salada de alface (alface, tomate, pepino)
+    const weeklyMenuData = {
+      segunda: {
+        label: "Segunda-feira",
+        options: [
+          {
+            id: "seg_1",
+            title: "Opção 1: Feijoada Escolar Caprichada",
+            badge: "Mais Pedido",
+            main: { name: "Feijoada Caprichada", ingredients: "Feijão preto, carne seca, linguiça calabresa, alho, cebola, folha de louro e sal" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca torrada, linguiça calabresa ralada, cebola e azeite" },
+            salad: { name: "Salada de Alface e Tomate", ingredients: "Alface crespa, tomate fresco em rodelas e pepino com limão" },
+            base: { name: "Arroz Blanco + Laranja", ingredients: "Arroz soltinho no alho e gomos de laranja doce" }
+          },
+          {
+            id: "seg_2",
+            title: "Opção 2: Carne de Panela Cozida",
+            badge: "Nutritivo",
+            main: { name: "Carne Cozida com Batata", ingredients: "Carne bovina (acém), batata inglesa, cenoura, tomate e cheiro-verde" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca, manteiga, alho dourado e sal" },
+            salad: { name: "Salada Cozida Nutritiva", ingredients: "Batata, cenoura em cubos e beterraba cozidas no vapor" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz branco soltinho e feijão carioca temperado" }
+          },
+          {
+            id: "seg_3",
+            title: "Opção 3: Strogonoff de Frango",
+            badge: "Favorito dos Alunos",
+            main: { name: "Strogonoff de Frango Cremoso", ingredients: "Peito de frango em cubos, molho de tomate caseiro, creme de leite e milho" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca, óleo, cebola e sal" },
+            salad: { name: "Salada de Alface Crocante", ingredients: "Alface americana, pepino e tomate" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco cozido no alho" }
+          },
+          {
+            id: "seg_4",
+            title: "Opção 4: Peito de Frango Desfiado",
+            badge: "Leve e Proteico",
+            main: { name: "Frango Desfiado Refogado", ingredients: "Peito de frango desfiado, milho verde, tomate, pimentão e salsa" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca e calabresa crocante" },
+            salad: { name: "Salada Cozida Colorida", ingredients: "Batata, cenoura e beterraba no vapor" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz branco e feijão carioca bem temperado" }
+          }
+        ]
+      },
+      terca: {
+        label: "Terça-feira",
+        options: [
+          {
+            id: "ter_1",
+            title: "Opção 1: Carne Assada de Forno",
+            badge: "Especial de Terça",
+            main: { name: "Carne Assada de Forno", ingredients: "Carne bovina assada, molho acebolado, alho e azeite" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca temperada com manteiga e alho" },
+            salad: { name: "Salada Cozida Nutritiva", ingredients: "Batata, cenoura e beterraba no vapor" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz branco soltinho e feijão carioca" }
+          },
+          {
+            id: "ter_2",
+            title: "Opção 2: Creme de Galinha Tradicional",
+            badge: "Super Cremoso",
+            main: { name: "Creme de Galinha com Milho", ingredients: "Peito de frango desfiado, leite integral, milho, creme de leite e tempero verde" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca com calabresa e cebola" },
+            salad: { name: "Salada de Alface e Pepino", ingredients: "Alface crespa, tomate e pepino fresco" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco fresco" }
+          },
+          {
+            id: "ter_3",
+            title: "Opção 3: Strogonoff de Frango",
+            badge: "Sucesso Garantido",
+            main: { name: "Strogonoff Delícia de Frango", ingredients: "Peito de frango, molho de tomate, creme de leite e milho verde" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca, óleo vegetal e sal" },
+            salad: { name: "Salada de Alface e Tomate", ingredients: "Alface americana, tomate e pepino fatiado" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco solto" }
+          },
+          {
+            id: "ter_4",
+            title: "Opção 4: Peito de Frango Desfiado",
+            badge: "Saboroso",
+            main: { name: "Frango Desfiado Acebolado", ingredients: "Peito de frango desfiado, cebola em rodelas, azeite e salsa" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca e calabresa bem frita" },
+            salad: { name: "Salada Cozida Colorida", ingredients: "Batata, cenoura e beterraba em cubos" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz e feijão carioca fresco" }
+          }
+        ]
+      },
+      quarta: {
+        label: "Quarta-feira",
+        options: [
+          {
+            id: "qua_1",
+            title: "Opção 1: Strogonoff de Frango da Quarta",
+            badge: "Campeão da Quarta",
+            main: { name: "Strogonoff de Frango Especial", ingredients: "Peito de frango em cubos, creme de leite, molho de tomate e milho" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca na manteiga" },
+            salad: { name: "Salada de Alface e Tomate", ingredients: "Alface crespa, tomate e pepino" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco fresquinho" }
+          },
+          {
+            id: "qua_2",
+            title: "Opção 2: Feijoada Escolar Caprichada",
+            badge: "Tradicional",
+            main: { name: "Feijoada Caprichada", ingredients: "Feijão preto, carne seca, calabresa, alho e louro" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca com calabresa ralada" },
+            salad: { name: "Salada Cozida Nutritiva", ingredients: "Batata, cenoura e beterraba cozidas" },
+            base: { name: "Arroz e Laranja", ingredients: "Arroz branco e fatias de laranja" }
+          },
+          {
+            id: "qua_3",
+            title: "Opção 3: Carne Cozida com Legumes",
+            badge: "Caseiro",
+            main: { name: "Carne de Panela com Cenoura", ingredients: "Carne bovina em cubos, cenoura, tomate e salsa" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca, alho e sal" },
+            salad: { name: "Salada de Alface e Pepino", ingredients: "Alface, tomate e pepino" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz branco e feijão carioca" }
+          },
+          {
+            id: "qua_4",
+            title: "Opção 4: Creme de Galinha com Milho",
+            badge: "Conforto",
+            main: { name: "Creme de Galinha Delícia", ingredients: "Frango desfiado, leite, milho verde e creme de leite" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca com calabresa" },
+            salad: { name: "Salada Cozida Colorida", ingredients: "Batata, cenoura e beterraba no vapor" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco cozido" }
+          }
+        ]
+      },
+      quinta: {
+        label: "Quinta-feira",
+        options: [
+          {
+            id: "qui_1",
+            title: "Opção 1: Creme de Galinha da Vovó",
+            badge: "Mais Pedido",
+            main: { name: "Creme de Galinha com Milho", ingredients: "Frango desfiado, leite, milho verde, creme de leite e cheiro-verde" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca, manteiga e cebola" },
+            salad: { name: "Salada Cozida Nutritiva", ingredients: "Batata, cenoura e beterraba em cubos" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco frito no alho" }
+          },
+          {
+            id: "qui_2",
+            title: "Opção 2: Carne Assada de Forno",
+            badge: "Saboroso",
+            main: { name: "Carne Assada Fatiada", ingredients: "Carne bovina assada, cebola em rodelas, tomate e azeite" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca com calabresa crocante" },
+            salad: { name: "Salada de Alface e Pepino", ingredients: "Alface crespa, tomate e pepino" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz soltinho e feijão carioca" }
+          },
+          {
+            id: "qui_3",
+            title: "Opção 3: Strogonoff de Frango",
+            badge: "Cremoso",
+            main: { name: "Strogonoff de Frango", ingredients: "Peito de frango, molho de tomate, creme de leite e milho" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca e sal" },
+            salad: { name: "Salada de Alface e Tomate", ingredients: "Alface americana, tomate e pepino" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco fresquinho" }
+          },
+          {
+            id: "qui_4",
+            title: "Opção 4: Peito de Frango Desfiado",
+            badge: "Leve",
+            main: { name: "Frango Desfiado com Milho", ingredients: "Peito de frango desfiado, milho verde, tomate e salsa" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca com calabresa" },
+            salad: { name: "Salada Cozida Colorida", ingredients: "Batata, cenoura e beterraba" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz e feijão carioca temperado" }
+          }
+        ]
+      },
+      sexta: {
+        label: "Sexta-feira",
+        options: [
+          {
+            id: "sex_1",
+            title: "Opção 1: Feijoada Caprichada de Sexta",
+            badge: "Especial Fim de Semana",
+            main: { name: "Feijoada Caprichada Completa", ingredients: "Feijão preto, carne seca, calabresa, alho e cebola" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca com calabresa bem frita" },
+            salad: { name: "Salada de Alface e Pepino", ingredients: "Alface crespa, tomate e pepino" },
+            base: { name: "Arroz e Laranja", ingredients: "Arroz soltinho e gomos de laranja doce" }
+          },
+          {
+            id: "sex_2",
+            title: "Opção 2: Strogonoff de Frango",
+            badge: "Favorito do Fim de Semana",
+            main: { name: "Strogonoff Delícia de Frango", ingredients: "Peito de frango em cubos, creme de leite, molho de tomate e milho" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca e manteiga" },
+            salad: { name: "Salada Cozida Nutritiva", ingredients: "Batata, cenoura e beterraba no vapor" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco solto" }
+          },
+          {
+            id: "sex_3",
+            title: "Opção 3: Carne Cozida de Panela",
+            badge: "Proteico",
+            main: { name: "Carne Cozida com Batatas", ingredients: "Carne bovina, batata, cenoura e pimentão" },
+            comp: { name: "Farofa de Calabresa", ingredients: "Farinha de mandioca e calabresa ralada" },
+            salad: { name: "Salada de Alface e Tomate", ingredients: "Alface crespa, tomate e pepino" },
+            base: { name: "Arroz e Feijão Carioca", ingredients: "Arroz branco e feijão carioca" }
+          },
+          {
+            id: "sex_4",
+            title: "Opção 4: Creme de Galinha Especial",
+            badge: "Cremoso",
+            main: { name: "Creme de Galinha com Milho", ingredients: "Frango desfiado, leite, milho verde e creme de leite" },
+            comp: { name: "Farofa Normal Tradicional", ingredients: "Farinha de mandioca e cebola" },
+            salad: { name: "Salada Cozida Colorida", ingredients: "Batata, cenoura e beterraba" },
+            base: { name: "Arroz Branco Soltinho", ingredients: "Arroz branco fresquinho" }
+          }
+        ]
+      }
+    };
+
+    let currentUser = null;
+    let currentDay = 'segunda';
+    let currentView = 'login'; // 'login' | 'voting' | 'admin'
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Netlify Identity Widget setup
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on("init", user => {
+          if (user) {
+            setUserFromNetlify(user);
+          } else {
+            checkSavedLocalUser();
+          }
+        });
+
+        window.netlifyIdentity.on("login", user => {
+          setUserFromNetlify(user);
+          window.netlifyIdentity.close();
+          showToast("Login Netlify Auth realizado com sucesso!", "success");
+        });
+
+        window.netlifyIdentity.on("logout", () => {
+          handleLogout();
+          showToast("Sessão encerrada.", "info");
+        });
+      } else {
+        checkSavedLocalUser();
+      }
+
+      renderAuthHeader();
+      renderCurrentView();
+    });
+
+    function setUserFromNetlify(user) {
+      const metadata = user.user_metadata || {};
+      currentUser = {
+        id: user.id || user.email,
+        name: metadata.full_name || user.email.split('@')[0],
+        email: user.email,
+        studentClass: metadata.student_class || '1º ano DS',
+        role: metadata.role || 'aluno',
+        isNetlify: true
+      };
+      saveUserToLocal(currentUser);
+      renderAuthHeader();
+      renderCurrentView();
+    }
+
+    function triggerNetlifyWidget() {
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.open();
+      } else {
+        showToast("Widget Netlify Identity não detectado localmente. Utilize o formulário institucional abaixo.", "warning");
+      }
+    }
+
+    function handleInstitutionalLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      const name = document.getElementById('loginName').value.trim() || email.split('@')[0];
+      const studentClass = document.getElementById('loginClass').value;
+
+      if (!studentClass) {
+        showToast("Selecione sua Turma para poder prosseguir!", "warning");
+        return;
+      }
+
+      currentUser = {
+        id: 'inst_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        name: name,
+        email: email,
+        studentClass: studentClass,
+        role: 'aluno',
+        isInstitutional: true
+      };
+
+      saveUserToLocal(currentUser);
+      showToast(`Acesso liberado! Bem-vindo(a), ${name} (${studentClass})`, "success");
+      renderAuthHeader();
+      renderCurrentView();
+    }
+
+    function saveUserToLocal(user) {
+      localStorage.setItem('nutrivota_logged_user', JSON.stringify(user));
+    }
+
+    function checkSavedLocalUser() {
+      const stored = localStorage.getItem('nutrivota_logged_user');
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+        } catch(err) {
+          currentUser = null;
+        }
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('nutrivota_logged_user');
+      if (window.netlifyIdentity && window.netlifyIdentity.currentUser()) {
+        window.netlifyIdentity.logout();
+      }
+      currentView = 'login';
+      renderAuthHeader();
+      renderCurrentView();
+    }
+
+    function renderAuthHeader() {
+      const container = document.getElementById('authContainer');
+      if (!container) return;
+
+      if (currentUser) {
+        const initials = currentUser.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+
+        container.innerHTML = `
+          <div class="flex items-center space-x-2.5 bg-white/10 backdrop-blur-md border border-white/20 pl-2.5 pr-3 py-1 rounded-full text-white text-xs">
+            <div class="w-8 h-8 rounded-full bg-amber-400 text-slate-900 font-black flex items-center justify-center shadow-md">
+              ${initials}
+            </div>
+            <div class="hidden sm:block text-left">
+              <div class="font-extrabold leading-tight truncate max-w-[120px]">${currentUser.name}</div>
+              <div class="text-[10px] text-sky-100 font-bold">${currentUser.studentClass || 'Aluno'}</div>
+            </div>
+            <button onclick="handleLogout()" title="Sair da Conta" class="w-7 h-7 bg-white/20 hover:bg-rose-500 rounded-full flex items-center justify-center text-white transition ml-1">
+              <i class="fa-solid fa-power-off text-xs"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="navigateTo('login')" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1">
+            <i class="fa-solid fa-user-lock"></i>
+            <span>Login Aluno</span>
+          </button>
+        `;
+      }
+    }
+
+    function navigateTo(view) {
+      currentView = view;
+      renderCurrentView();
+    }
+
+    function renderCurrentView() {
+      const loginScreen = document.getElementById('loginScreen');
+      const votingScreen = document.getElementById('votingScreen');
+      const adminScreen = document.getElementById('adminScreen');
+      const navBtnVoting = document.getElementById('navBtnVoting');
+      const navBtnAdmin = document.getElementById('navBtnAdmin');
+
+      loginScreen.classList.add('hidden');
+      votingScreen.classList.add('hidden');
+      adminScreen.classList.add('hidden');
+
+      if (!currentUser) {
+        loginScreen.classList.remove('hidden');
+        return;
+      }
+
+      if (currentView === 'admin') {
+        adminScreen.classList.remove('hidden');
+        navBtnVoting.className = "px-4 py-2 rounded-lg text-sky-100 hover:text-white transition flex items-center gap-1.5";
+        navBtnAdmin.className = "px-4 py-2 rounded-lg text-white bg-white/20 shadow-sm transition flex items-center gap-1.5";
+        renderAdminDashboard();
+      } else {
+        votingScreen.classList.remove('hidden');
+        navBtnVoting.className = "px-4 py-2 rounded-lg text-white bg-white/20 shadow-sm transition flex items-center gap-1.5";
+        navBtnAdmin.className = "px-4 py-2 rounded-lg text-sky-100 hover:text-white transition flex items-center gap-1.5";
+        renderVotingScreen();
+      }
+    }
+
+    function getStoredVotes() {
+      const votes = localStorage.getItem('nutrivota_votes_database_v2');
+      return votes ? JSON.parse(votes) : [];
+      // Structure of item: { day: 'segunda', optionId: 'seg_1', userId: '...', studentClass: '1º ano DS', timestamp: 123456 }
+    }
+
+    function saveStoredVotes(votesArray) {
+      localStorage.setItem('nutrivota_votes_database_v2', JSON.stringify(votesArray));
+    }
+
+    function getUserVotedDays() {
+      if (!currentUser) return {};
+      const votes = getStoredVotes();
+      const userVotes = {};
+      
+      votes.forEach(vote => {
+        if (vote.userId === currentUser.id) {
+          userVotes[vote.day] = vote.optionId;
+        }
+      });
+      return userVotes;
+    }
+
+    function renderVotingScreen() {
+      if (currentUser) {
+        document.getElementById('studentWelcomeTitle').innerText = `Bem-vindo(a), ${currentUser.name}!`;
+        document.getElementById('studentClassBadge').innerText = `Turma: ${currentUser.studentClass}`;
+      }
+      updateDayTabsBadges();
+      switchDay(currentDay);
+    }
+
+    function switchDay(dayKey) {
+      currentDay = dayKey;
+      const tabs = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+
+      tabs.forEach(tab => {
+        const btn = document.getElementById(`tab_${tab}`);
+        if (btn) {
+          if (tab === currentDay) {
+            btn.className = "day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2 bg-sky-600 text-white shadow-md shadow-sky-600/20";
+          } else {
+            btn.className = "day-tab px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2 text-slate-600 hover:bg-slate-100";
+          }
+        }
+      });
+
+      document.getElementById('activeDayTitle').innerText = `Cardápio de ${weeklyMenuData[currentDay].label}`;
+      renderOptionsGrid();
+    }
+
+    function updateDayTabsBadges() {
+      const userVotes = getUserVotedDays();
+      const tabs = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+      let totalVotedDays = 0;
+
+      tabs.forEach(tab => {
+        const badge = document.getElementById(`badge_${tab}`);
+        if (badge) {
+          if (userVotes[tab]) {
+            badge.innerText = "Votado";
+            badge.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold border border-emerald-300";
+            totalVotedDays++;
+          } else {
+            badge.innerText = "Pendente";
+            badge.className = "text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-semibold";
+          }
+        }
+      });
+
+      const summary = document.getElementById('studentVotingSummaryBadge');
+      if (summary) {
+        summary.innerHTML = `
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Progresso da Semana</div>
+          <div class="text-sm font-black text-slate-800"><span class="text-emerald-600">${totalVotedDays}</span> de 5 dias votados</div>
+        `;
+      }
+    }
+
+    function renderOptionsGrid() {
+      const container = document.getElementById('optionsGrid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const dayData = weeklyMenuData[currentDay];
+      const allVotes = getStoredVotes();
+      const userVotes = getUserVotedDays();
+      const userVotedOptionId = userVotes[currentDay];
+
+      // Calculate total votes for current day
+      const dayVotesList = allVotes.filter(v => v.day === currentDay);
+      const dayTotalVotesCount = dayVotesList.length;
+
+      dayData.options.forEach(option => {
+        const optionVotesCount = dayVotesList.filter(v => v.optionId === option.id).length;
+        const percentage = dayTotalVotesCount === 0 ? 0 : Math.round((optionVotesCount / dayTotalVotesCount) * 100);
+        const isUserChoice = userVotedOptionId === option.id;
+
+        const card = document.createElement('div');
+        card.className = `bg-white rounded-2xl border ${
+          isUserChoice 
+            ? 'border-2 border-emerald-500 shadow-lg ring-2 ring-emerald-500/20' 
+            : 'border-slate-200/80 shadow-sm'
+        } p-5 flex flex-col justify-between hover:shadow-md transition relative`;
+
+        card.innerHTML = `
+          <div>
+            <!-- Header Badge & Selection Status -->
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-md">
+                ${option.badge}
+              </span>
+              ${isUserChoice ? '<span class="text-[10px] bg-emerald-500 text-white font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm"><i class="fa-solid fa-check"></i>Seu Voto</span>' : ''}
+            </div>
+
+            <h4 class="text-sm sm:text-base font-black text-slate-800 mb-4 pb-2 border-b border-slate-100 leading-snug">
+              ${option.title}
+            </h4>
+
+            <!-- Dish Breakdown and Highlighted Ingredients -->
+            <div class="space-y-3 mb-5">
+              
+              <!-- Prato Principal -->
+              <div>
+                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>🍖</span> ${option.main.name}
+                </div>
+                <div class="mt-1 text-[11px] text-slate-600 bg-amber-50/70 p-2 rounded-lg border-l-2 border-amber-400 leading-relaxed">
+                  <b class="text-amber-900">Ingredientes:</b> ${option.main.ingredients}
+                </div>
+              </div>
+
+              <!-- Acompanhamento / Farofa -->
+              <div>
+                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>🌾</span> ${option.comp.name}
+                </div>
+                <div class="mt-1 text-[11px] text-slate-600 bg-orange-50/70 p-2 rounded-lg border-l-2 border-orange-400 leading-relaxed">
+                  <b class="text-orange-900">Ingredientes:</b> ${option.comp.ingredients}
+                </div>
+              </div>
+
+              <!-- Salada -->
+              <div>
+                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>🥗</span> ${option.salad.name}
+                </div>
+                <div class="mt-1 text-[11px] text-slate-600 bg-emerald-50/70 p-2 rounded-lg border-l-2 border-emerald-400 leading-relaxed">
+                  <b class="text-emerald-900">Ingredientes:</b> ${option.salad.ingredients}
+                </div>
+              </div>
+
+              <!-- Base -->
+              <div>
+                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>🍚</span> ${option.base.name}
+                </div>
+                <div class="mt-1 text-[11px] text-slate-600 bg-sky-50/70 p-2 rounded-lg border-l-2 border-sky-400 leading-relaxed">
+                  <b class="text-sky-900">Ingredientes:</b> ${option.base.ingredients}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 space-y-3">
+            <div>
+              <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                <span>Votos: ${optionVotesCount}</span>
+                <span class="text-sky-600 font-extrabold">${percentage}%</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-sky-500 rounded-full transition-all duration-500" style="width: ${percentage}%;"></div>
+              </div>
+            </div>
+
+            <button onclick="handleCastVote('${option.id}')" 
+              class="w-full py-2.5 px-4 font-extrabold text-xs rounded-xl transition shadow-sm flex items-center justify-center space-x-2 ${
+                isUserChoice 
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20' 
+                  : 'bg-sky-600 text-white hover:bg-sky-700 shadow-sky-600/20'
+              }">
+              <i class="fa-solid ${isUserChoice ? 'fa-circle-check' : 'fa-check-to-slot'}"></i>
+              <span>${isUserChoice ? 'Voto Confirmado' : 'Votar nesta opção'}</span>
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function handleCastVote(optionId) {
+      if (!currentUser) {
+        showToast("Você precisa fazer login para votar!", "warning");
+        return;
+      }
+
+      let allVotes = getStoredVotes();
+      // Remove any existing vote from this user for this day
+      allVotes = allVotes.filter(v => !(v.userId === currentUser.id && v.day === currentDay));
+
+      // Push new vote with studentClass
+      allVotes.push({
+        day: currentDay,
+        optionId: optionId,
+        userId: currentUser.id,
+        studentClass: currentUser.studentClass || 'Não informada',
+        timestamp: Date.now()
+      });
+
+      saveStoredVotes(allVotes);
+      showToast(`Voto registrado com sucesso para ${weeklyMenuData[currentDay].label}!`, "success");
+
+      updateDayTabsBadges();
+      renderOptionsGrid();
+    }
+
+    function renderAdminDashboard() {
+      const allVotes = getStoredVotes();
+      const filterClass = document.getElementById('adminClassFilter')?.value || 'ALL';
+      const container = document.getElementById('adminDaysGrid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Update Filter Text
+      const filterText = document.getElementById('adminFilterStatusText');
+      if (filterText) {
+        filterText.innerText = filterClass === 'ALL' ? 'gerais de todas as turmas' : `exclusivos da turma ${filterClass}`;
+      }
+
+      // Filter votes if specific class is selected
+      const filteredVotes = filterClass === 'ALL' ? allVotes : allVotes.filter(v => v.studentClass === filterClass);
+
+      let totalGlobalVotes = filteredVotes.length;
+      let topActiveDayName = '-';
+      let maxDayVotes = -1;
+      let topOverallDishName = '-';
+      let maxDishVotes = -1;
+
+      // Calculate class participation for all 8 classes
+      const knownClasses = ["9º ano A", "9º ano B", "1º ano DS", "1º ano ADM", "2º DS", "2º Jogos", "3º A", "3º B"];
+      const classCountMap = {};
+      knownClasses.forEach(c => classCountMap[c] = 0);
+
+      allVotes.forEach(v => {
+        if (classCountMap[v.studentClass] !== undefined) {
+          classCountMap[v.studentClass]++;
+        }
+      });
+
+      let topClass = '-';
+      let topClassVotes = -1;
+      Object.keys(classCountMap).forEach(cName => {
+        if (classCountMap[cName] > topClassVotes && classCountMap[cName] > 0) {
+          topClassVotes = classCountMap[cName];
+          topClass = cName;
+        }
+      });
+
+      // Render Class Participation Grid
+      const classGrid = document.getElementById('classParticipationGrid');
+      if (classGrid) {
+        classGrid.innerHTML = '';
+        knownClasses.forEach(cName => {
+          const count = classCountMap[cName];
+          const item = document.createElement('div');
+          item.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 text-center";
+          item.innerHTML = `
+            <div class="text-[11px] font-extrabold text-slate-700">${cName}</div>
+            <div class="text-base font-black text-sky-600 mt-0.5">${count} <span class="text-[10px] font-normal text-slate-500">votos</span></div>
+          `;
+          classGrid.appendChild(item);
+        });
+      }
+
+      // Process Day-by-Day Results
+      Object.keys(weeklyMenuData).forEach(dayKey => {
+        const dayData = weeklyMenuData[dayKey];
+        const dayVotesList = filteredVotes.filter(v => v.day === dayKey);
+        const dayTotalVotes = dayVotesList.length;
+
+        let dayMaxVotes = -1;
+
+        // Count votes per option
+        const optionCounts = {};
+        dayData.options.forEach(opt => {
+          const count = dayVotesList.filter(v => v.optionId === opt.id).length;
+          optionCounts[opt.id] = count;
+
+          if (count > dayMaxVotes) dayMaxVotes = count;
+
+          if (count > maxDishVotes && count > 0) {
+            maxDishVotes = count;
+            topOverallDishName = opt.title.split(':')[1]?.trim() || opt.title;
+          }
+        });
+
+        if (dayTotalVotes > maxDayVotes && dayTotalVotes > 0) {
+          maxDayVotes = dayTotalVotes;
+          topActiveDayName = dayData.label;
+        }
+
+        // Build HTML for Day Card
+        const dayCard = document.createElement('div');
+        dayCard.className = "bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4";
+
+        let optionsListHTML = '';
+        dayData.options.forEach(option => {
+          const optVotes = optionCounts[option.id] || 0;
+          const percentage = dayTotalVotes === 0 ? 0 : Math.round((optVotes / dayTotalVotes) * 100);
+          const isWinner = optVotes === dayMaxVotes && optVotes > 0;
+
+          optionsListHTML += `
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold">
+                <span class="text-slate-800 flex items-center gap-1.5">
+                  ${option.title}
+                  ${isWinner ? '<span class="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full font-black border border-amber-300">🏆 CAMPEÃO</span>' : ''}
+                </span>
+                <span class="text-slate-600">${optVotes} votos (${percentage}%)</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full ${isWinner ? 'bg-emerald-500' : 'bg-sky-500'} rounded-full transition-all duration-500" style="width: ${percentage}%;"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        dayCard.innerHTML = `
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-calendar-week text-sky-600"></i>
+              ${dayData.label}
+            </h3>
+            <span class="text-xs font-extrabold text-sky-800 bg-sky-50 px-3 py-1 rounded-full border border-sky-200">
+              ${dayTotalVotes} Votos
+            </span>
+          </div>
+          <div class="space-y-3.5 pt-1">
+            ${optionsListHTML}
+          </div>
+        `;
+
+        container.appendChild(dayCard);
+      });
+
+      document.getElementById('statTotalVotes').innerText = totalGlobalVotes;
+      document.getElementById('statTopOverallDish').innerText = topOverallDishName;
+      document.getElementById('statTopClass').innerText = topClass;
+      document.getElementById('statTopActiveDay').innerText = topActiveDayName;
+    }
+
+    function openModal({ title, message, confirmText, confirmStyle, onConfirm }) {
+      const modal = document.getElementById('customModal');
+      document.getElementById('modalTitle').innerText = title || "Confirmação";
+      document.getElementById('modalMessage').innerText = message || "";
+      
+      const confirmBtn = document.getElementById('modalBtnConfirm');
+      confirmBtn.innerText = confirmText || "Confirmar";
+      confirmBtn.className = `px-4 py-2 font-bold text-xs rounded-xl transition shadow-md ${confirmStyle || 'bg-rose-600 hover:bg-rose-700 text-white'}`;
+      
+      confirmBtn.onclick = () => {
+        closeModal();
+        if (onConfirm) onConfirm();
+      };
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('customModal').classList.add('hidden');
+    }
+
+    function confirmResetWeeklyVotes() {
+      openModal({
+        title: "Limpar Cardápio da Semana",
+        message: "Atenção: Esta ação irá apagar todos os votos registrados para todas as turmas durante esta semana. Deseja iniciar um novo ciclo de votação?",
+        confirmText: "Sim, Zerar Cardápio",
+        confirmStyle: "bg-rose-600 hover:bg-rose-700 text-white",
+        onConfirm: () => {
+          localStorage.removeItem('nutrivota_votes_database_v2');
+          showToast("Votação semanal zerada com sucesso!", "success");
+          renderAdminDashboard();
+        }
+      });
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      let bg = "bg-slate-800 text-white";
+      let icon = "fa-circle-info";
+
+      if (type === "success") {
+        bg = "bg-emerald-600 text-white";
+        icon = "fa-circle-check";
+      } else if (type === "warning") {
+        bg = "bg-amber-500 text-white";
+        icon = "fa-triangle-exclamation";
+      }
+
+      toast.className = `${bg} px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-3 text-xs font-bold pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 max-w-sm border border-white/10`;
+      toast.innerHTML = `
+        <i class="fa-solid ${icon} text-sm"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
