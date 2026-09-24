@@ -1,0 +1,21 @@
+{
+  "name": "tropa-do-caldeir-o",
+  "version": "1.0.0",
+  "description": "Transformamos a hora do almoço na escola em uma experiência participativa, saudável e  muito sustentável. Nosso projeto implementou um sistema diário\r de votação onde os alunos do CETI Arimathéa Tito escolhem o prato principal(almoço) do dia entre 4 opções preparadas pelo nosso grupo, onde nós \r pegamos algumas refeições que já tinham no cardápio antigo e aprimoramos elas. Combinando tecnologia simples, autonomia estudantil e combate ao\r desperdício, garantindo uma refeição que agrada ao paladar dos estudantes enquanto promovemos a conscientização alimentar no ambiente escolar.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emanuelyurquisa-stack/tropa-do-caldeir-o.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/emanuelyurquisa-stack/tropa-do-caldeir-o/issues"
+  },
+  "homepage": "https://github.com/emanuelyurquisa-stack/tropa-do-caldeir-o#readme"
+}
