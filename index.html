@@ -677,6 +677,69 @@
       }
     }
 
+    netlifyIdentity.init();
+
+    // ========================================================
+    // 2. COLOQUE A SUA FUNÇÃO AQUI
+    // ========================================================
+    async function registerVoteInBackend(day, optionId, studentClass) {
+      // Pegamos o usuário logado atualmente no Netlify Identity
+      const user = netlifyIdentity.currentUser();
+      
+      if (!user) {
+        alert("Você precisa estar logado para votar.");
+        return;
+      }
+
+      // Geramos o token JWT fresquinho
+      const token = await user.jwt();
+
+      try {
+        const response = await fetch('/.netlify/functions/cast-vote', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Aqui está o segredo: enviamos o token no cabeçalho de Autorização
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({
+            day: day,
+            optionId: optionId,
+            studentClass: studentClass
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert("Sucesso: " + result.message);
+          // Atualize a interface aqui (ex: marcar o prato como escolhido ou atualizar gráficos)
+        } else {
+          alert("Erro: " + result.error);
+        }
+      } catch (err) {
+        console.error("Erro de conexão", err);
+        alert("Falha na comunicação com o servidor.");
+      }
+    }
+
+    // ========================================================
+    // 3. COMO INVOCAR A FUNÇÃO AO CLICAR NO BOTÃO DE VOTO
+    // ========================================================
+    async function handleConfirmVote(day, optionId) {
+      // Obter a turma selecionada no menu dropdown
+      const classSelect = document.getElementById('studentClassSelect');
+      const studentClass = classSelect ? classSelect.value : '';
+
+      if (!studentClass) {
+        alert("Por favor, selecione a sua turma antes de votar.");
+        return;
+      }
+
+      // Chama a função que envia para a Netlify Function
+      await registerVoteInBackend(day, optionId, studentClass);
+    }
+
     // Inicialização da página
     renderCards();
     renderResults();
